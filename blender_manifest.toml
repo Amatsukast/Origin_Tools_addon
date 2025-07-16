@@ -1,0 +1,16 @@
+schema_version = "1.0.0"
+id = "origin_tools"
+name = "Origin Tools"
+version = "1.1.6"
+tagline = "Set object origin to Min/Max/Center of each axis"
+maintainer = "Amatsukast"
+type = "add-on"
+tags = ["Object", "3D View"]
+blender_version_min = "4.2.0"
+license = ["SPDX:GPL-3.0-or-later"]
+copyright = [
+    "2025 Amatsukast"
+]
+
+[permissions]
+files = "No special file permissions required"
