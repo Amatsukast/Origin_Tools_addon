@@ -45,7 +45,7 @@ It is designed to streamline origin adjustment tasks for modeling, scene organiz
 
 ## Requirements
 
-- Blender 4.0 or newer
+- Blender 4.2.0 or newer
 
 ---
 
@@ -104,7 +104,7 @@ Copyright (C) 2025 Amatsukast
 
 ## 動作条件
 
-- Blender 4.0以降
+- Blender 4.2.0 以降
 
 ---
 
