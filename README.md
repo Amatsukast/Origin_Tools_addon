@@ -36,7 +36,7 @@ Copyright (C) 2025 Amatsukast
 
 **Origin Tools**は、オブジェクトの原点を各軸（X/Y/Z）の最小・最大・中心、またはバウンディングボックスの中心に素早く移動できるBlenderアドオンです。モデリングやシーン整理の効率化に大きく貢献します。
 
-<img src="images/UI_EN.jpg" width="25%">
+<img src="images/UI_JP.jpg" width="25%">
 
 ## 主な機能
 
