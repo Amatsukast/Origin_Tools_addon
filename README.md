@@ -2,6 +2,8 @@
 
 **Origin Tools** is a Blender add-on designed to streamline origin adjustment tasks for modeling, scene organization, and workflow efficiency. It allows you to quickly set the origin of objects to the Min, Max, or Center along any axis, or to the center of the bounding box.
 
+![Origin Tools UI](images/UI_EN.jpg)
+
 ## Features
 
 - **Axis-Specific Alignment**: Move object origin to the minimum, maximum, or center along the X, Y, or Z axis.
@@ -33,6 +35,8 @@ Copyright (C) 2025 Amatsukast
 # Origin Tools（日本語）
 
 **Origin Tools**は、オブジェクトの原点を各軸（X/Y/Z）の最小・最大・中心、またはバウンディングボックスの中心に素早く移動できるBlenderアドオンです。モデリングやシーン整理の効率化に大きく貢献します。
+
+![Origin Tools UI](images/UI_JP.jpg)
 
 ## 主な機能
 
