@@ -1,5 +1,6 @@
 import bpy
 import mathutils
+import bmesh
 from bpy.props import EnumProperty
 from bpy.app.translations import pgettext_iface as _
 
@@ -22,7 +23,7 @@ def move_origin(
     prev_mode = obj.mode
     bpy.ops.object.mode_set(mode="OBJECT")
 
-    # Center all axes first
+    # Center all axes first if requested
     if center_before_move:
         bpy.ops.object.select_all(action="DESELECT")
         obj.select_set(True)
@@ -49,7 +50,7 @@ def move_origin(
         obj.data.transform(mathutils.Matrix.Translation(vec))
         obj.data.update()
     else:
-        # Move origin (as before)
+        # Move origin using cursor
         min_val, max_val = get_axis_minmax(obj, axis, use_world)
         target_val = min_val if to_min else max_val
 
@@ -68,8 +69,9 @@ def move_origin(
         bpy.ops.object.origin_set(type="ORIGIN_CURSOR")
         bpy.context.scene.cursor.location = cursor_prev
 
+    # Restore previous mode using a valid operator mode string
     if prev_mode != "OBJECT":
-        bpy.ops.object.mode_set(mode=prev_mode)
+        bpy.ops.object.mode_set(mode=mode_to_op_mode(prev_mode))
 
 
 def get_axis_center(obj, axis, use_world):
@@ -81,7 +83,7 @@ def move_origin_center(obj, axis, use_world, center_before_move=False):
     prev_mode = obj.mode
     bpy.ops.object.mode_set(mode="OBJECT")
 
-    # Center all axes first
+    # Center all axes first if requested
     if center_before_move:
         bpy.ops.object.select_all(action="DESELECT")
         obj.select_set(True)
@@ -106,8 +108,9 @@ def move_origin_center(obj, axis, use_world, center_before_move=False):
     bpy.ops.object.origin_set(type="ORIGIN_CURSOR")
     bpy.context.scene.cursor.location = cursor_prev
 
+    # Restore previous mode using a valid operator mode string
     if prev_mode != "OBJECT":
-        bpy.ops.object.mode_set(mode=prev_mode)
+        bpy.ops.object.mode_set(mode=mode_to_op_mode(prev_mode))
 
 
 class ORIGINTOOLS_OT_MoveOrigin(bpy.types.Operator):
@@ -149,7 +152,9 @@ class ORIGINTOOLS_OT_MoveOrigin(bpy.types.Operator):
                     center_before_move,
                     move_mesh,
                 )
-        bpy.ops.object.select_all(action="DESELECT")
+        # Restore selection using the API (avoid operators)
+        for o in context.view_layer.objects:
+            o.select_set(False)
         for obj in selected:
             obj.select_set(True)
         context.view_layer.objects.active = active
@@ -185,7 +190,9 @@ class ORIGINTOOLS_OT_MoveOriginCenter(bpy.types.Operator):
         for obj in context.selected_objects:
             if obj.type == "MESH":
                 move_origin_center(obj, self.axis, self.use_world, center_before_move)
-        bpy.ops.object.select_all(action="DESELECT")
+        # Restore selection using the API (avoid operators)
+        for o in context.view_layer.objects:
+            o.select_set(False)
         for obj in selected:
             obj.select_set(True)
         context.view_layer.objects.active = active
@@ -208,26 +215,108 @@ class ORIGINTOOLS_OT_MoveOriginCenterAll(bpy.types.Operator):
         selected = [obj for obj in context.selected_objects]
         active = context.view_layer.objects.active
         move_mesh = context.scene.origin_tools_settings.move_mesh
+
+        prev_mode = ensure_object_mode(
+            context
+        )  # prev_mode is original context.mode string
+
         for obj in context.selected_objects:
             if obj.type == "MESH":
                 if move_mesh:
-                    bpy.ops.object.select_all(action="DESELECT")
+                    # Change selection using the API (avoid operators)
+                    for o in context.view_layer.objects:
+                        o.select_set(False)
                     obj.select_set(True)
-                    bpy.context.view_layer.objects.active = obj
+                    context.view_layer.objects.active = obj
                     bpy.ops.object.origin_set(type="GEOMETRY_ORIGIN")
                     coords = get_bbox_coords(obj, use_world=False)
                     center = sum(coords, mathutils.Vector((0, 0, 0))) / 8
                     obj.data.transform(mathutils.Matrix.Translation(center))
                     obj.data.update()
                 else:
-                    bpy.ops.object.select_all(action="DESELECT")
+                    for o in context.view_layer.objects:
+                        o.select_set(False)
                     obj.select_set(True)
-                    bpy.context.view_layer.objects.active = obj
+                    context.view_layer.objects.active = obj
                     bpy.ops.object.origin_set(type="ORIGIN_CENTER_OF_MASS")
-        bpy.ops.object.select_all(action="DESELECT")
+
+        # Restore selection and active object using the API (avoid operators)
+        for o in context.view_layer.objects:
+            o.select_set(False)
         for obj in selected:
             obj.select_set(True)
         context.view_layer.objects.active = active
+
+        # Restore mode (convert to a valid operator mode string)
+        if prev_mode != context.mode:
+            bpy.ops.object.mode_set(mode=mode_to_op_mode(prev_mode))
+
+        return {"FINISHED"}
+
+
+class ORIGINTOOLS_OT_AlignOriginToFace(bpy.types.Operator):
+    bl_idname = "origintools.align_origin_to_face"
+    bl_label = _("Align Origin to Selected Face")
+    bl_description = _(
+        "Align object's origin position and rotation to the active face (face faces down)"
+    )
+    bl_options = {"UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+        return obj is not None and obj.type == "MESH" and context.mode == "EDIT_MESH"
+
+    def execute(self, context):
+        obj = context.active_object
+        if obj is None or obj.type != "MESH" or context.mode != "EDIT_MESH":
+            self.report({"ERROR"}, "Active object is not a mesh in Edit Mode.")
+            return {"CANCELLED"}
+
+        bm = bmesh.from_edit_mesh(obj.data)
+        face = bm.faces.active
+        if face is None:
+            self.report({"ERROR"}, "No active face is selected.")
+            return {"CANCELLED"}
+
+        # --- 1. Build local orientation matrix for the face ---
+        z_axis = face.normal.normalized()
+
+        # X-axis hint: direction of the first loop's edge on the face
+        loop = face.loops[0]
+        x_axis_raw = (loop.link_loop_next.vert.co - loop.vert.co).normalized()
+
+        # Y = Z x X_raw, then re-orthogonalize X = Y x Z
+        y_axis = z_axis.cross(x_axis_raw).normalized()
+        x_axis = y_axis.cross(z_axis).normalized()
+
+        # Create matrix (rows = X, Y, Z)
+        mat_rot_local = mathutils.Matrix((x_axis, y_axis, z_axis))
+        mat_rot_local.transpose()  # transpose to ensure correct orientation
+
+        # --- 2. Build target orientation matrix ---
+        target_z = mathutils.Vector((0, 0, -1))  # world down
+        target_x = mathutils.Vector((1, 0, 0))  # world X
+        target_y = mathutils.Vector(
+            (0, -1, 0)
+        )  # chosen to keep right-hand system with Z = -1
+
+        mat_rot_target = mathutils.Matrix((target_x, target_y, target_z))
+        mat_rot_target.transpose()
+
+        # --- 3. Compute final transform matrix ---
+        mat_rot_4x4 = mat_rot_target.to_4x4() @ mat_rot_local.to_4x4().inverted()
+        mat_trans = mathutils.Matrix.Translation(-face.calc_center_median())
+        mat_final = mat_rot_4x4 @ mat_trans
+
+        # --- 4. Apply transform to mesh (BMesh) and compensate object world matrix ---
+        bmesh.ops.transform(bm, matrix=mat_final, verts=bm.verts)
+        bmesh.update_edit_mesh(obj.data)
+
+        obj.matrix_world = obj.matrix_world @ mat_final.inverted()
+        context.view_layer.update()
+
+        self.report({"INFO"}, "Origin aligned to the selected face.")
         return {"FINISHED"}
 
 
@@ -275,7 +364,7 @@ class ORIGINTOOLS_PT_Panel(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return context.mode == "OBJECT"
+        return context.mode in ("OBJECT", "EDIT_MESH")
 
     def draw(self, context):
         layout = self.layout
@@ -334,6 +423,17 @@ class ORIGINTOOLS_PT_Panel(bpy.types.Panel):
         row.enabled = True  # Enabled regardless of move_mesh
         row.operator("origintools.move_origin_center_all", text=_("Center (All Axes)"))
 
+        # Edit mode display (always shown, only enabled in edit mode)
+        layout.separator()
+        layout.label(text=_("Edit Mode:"))
+        row = layout.row()
+        row.enabled = context.mode == "EDIT_MESH"
+        row.operator(
+            "origintools.align_origin_to_face",
+            icon="SNAP_FACE",
+            text=_("Origin to Face"),
+        )
+
 
 classes = (
     ORIGINTOOLS_OT_MoveOrigin,
@@ -341,6 +441,7 @@ classes = (
     ORIGINTOOLS_OT_MoveOriginCenterAll,
     ORIGINTOOLS_PT_Panel,
     OriginToolsSettings,
+    ORIGINTOOLS_OT_AlignOriginToFace,
 )
 
 
@@ -356,3 +457,62 @@ def unregister():
     for cls in reversed(classes):
         bpy.utils.unregister_class(cls)
     del bpy.types.Scene.origin_tools_settings
+
+
+def ensure_object_mode(context):
+    """Switch to OBJECT mode and return the previous mode. If the simple call fails,
+    try using an override for a VIEW_3D area to make the operator call safe."""
+    prev_mode = context.mode
+    if prev_mode == "OBJECT":
+        return prev_mode
+
+    # Try the normal operator call first
+    try:
+        bpy.ops.object.mode_set(mode="OBJECT")
+        return prev_mode
+    except Exception:
+        pass
+
+    # If that fails, find a VIEW_3D area and call with an override
+    for area in context.window.screen.areas:
+        if area.type == "VIEW_3D":
+            region = next((r for r in area.regions if r.type == "WINDOW"), None)
+            if region is None:
+                continue
+            override = {
+                "window": context.window,
+                "screen": context.window.screen,
+                "area": area,
+                "region": region,
+                "scene": context.scene,
+            }
+            try:
+                bpy.ops.object.mode_set(override, mode="OBJECT")
+            except Exception:
+                pass
+            break
+
+    return prev_mode
+
+
+def mode_to_op_mode(mode_str):
+    """Convert context.mode / obj.mode to a valid bpy.ops.object.mode_set mode string."""
+    if not mode_str:
+        return "OBJECT"
+    # context.mode may be like "EDIT_MESH", "POSE", etc.
+    if mode_str.startswith("EDIT"):
+        return "EDIT"
+    # common direct mappings
+    valid = {
+        "OBJECT",
+        "SCULPT",
+        "VERTEX_PAINT",
+        "WEIGHT_PAINT",
+        "TEXTURE_PAINT",
+        "PAINT_TEXTURE",
+        "POSE",
+    }
+    if mode_str in valid:
+        return mode_str
+    # fallback to OBJECT
+    return "OBJECT"

@@ -22,7 +22,7 @@ bl_info = {
     "name": "Origin Tools",
     "description": "Add-on to move object origin to Min/Max/Center of each axis",
     "author": "Amatsukast",
-    "version": (1, 1, 6),
+    "version": (1, 2, 7),
     "blender": (4, 2, 0),
     "location": "View3D > Sidebar > Origin Tools",
     "category": "Object",

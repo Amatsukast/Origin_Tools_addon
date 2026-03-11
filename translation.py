@@ -41,6 +41,13 @@ translation_dict = {
         ("*", "Center"): "中心",
         ("*", "All Axes:"): "全軸：",
         ("*", "Center (All Axes)"): "中心に移動",
+        ("*", "Edit Mode:"): "編集モード：",
+        ("*", "Origin to Face"): "原点を面に合わせる",
+        ("*", "Align Origin to Selected Face"): "選択面に原点を合わせる",
+        (
+            "*",
+            "Align object's origin position and rotation to the active face (face faces down)",
+        ): "アクティブな面にオブジェクトの原点位置と回転を合わせます（面を下向きにします）",
     }
 }
 

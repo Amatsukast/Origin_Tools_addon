@@ -1,53 +1,27 @@
 # Origin Tools
 
-**Origin Tools** is a Blender add-on for quickly setting the origin of objects to the Min, Max, or Center along any axis, or to the center of the bounding box.  
-It is designed to streamline origin adjustment tasks for modeling, scene organization, and workflow efficiency.
-
----
+**Origin Tools** is a Blender add-on designed to streamline origin adjustment tasks for modeling, scene organization, and workflow efficiency. It allows you to quickly set the origin of objects to the Min, Max, or Center along any axis, or to the center of the bounding box.
 
 ## Features
 
-- Move object origin to the minimum or maximum along X, Y, or Z axis
-- Move origin to the center along a specific axis
-- Move origin to the center of the bounding box (all axes)
-- Option to move the mesh instead of the origin (maintain world transform)
-- Works regardless of object transform values (location, rotation, scale)
-- Fully supports parenting, including rotated or transformed parent objects
-- Supports both local and global (world) axes
-- Multi-object support: works with multiple selected objects at once
-- Simple and intuitive UI in the Sidebar
+- **Axis-Specific Alignment**: Move object origin to the minimum, maximum, or center along the X, Y, or Z axis.
+- **Center Before Move**: Option to center the origin on all axes automatically before moving to a specified Min or Max position.
+- **Center All Axes**: Move origin to the center of the bounding box across all axes simultaneously.
+- **Origin to Face (Edit Mode)**: Align the object's origin position and rotation to the active face. It automatically rotates the object so the selected face points down towards world -Z.
+- **Move Mesh Mode**: Move the mesh data itself instead of the origin to match the specified position. This is useful for maintaining the object's world location.
+- **Axis Mode Selection**: Choose between Local and Global (World) coordinate systems for origin operations.
+- **Robust Compatibility**: Works accurately regardless of object transform values (location, rotation, scale) and fully supports complex parenting hierarchies.
+- **Batch Processing**: Supports executing operations on multiple selected objects at once.
 
----
+## Installation & Location
 
-## Location
+1. Install the add-on via `Edit > Preferences > Add-ons > Install...` in Blender.
+2. The UI can be found in the `3D Viewport > Sidebar (N-key) > Origin Tools` tab.
 
-`3D Viewport > Sidebar (N-key) > Origin Tools` tab
+## Usage Requirements
 
----
-
-## Usage
-
-1. Select one or more objects in the 3D Viewport.
-2. Open the "Origin Tools" panel from the Sidebar.
-3. Choose the axis and operation (Min / Center / Max).
-4. Use the checkboxes to switch between Local/Global axes or enable "Move Mesh" mode.
-5. Click the desired operation button to move the object's origin or mesh.
-
----
-
-## Languages
-
-- English UI (default)
-- Japanese translation included  
-  The UI switches automatically based on Blender's language settings.
-
----
-
-## Requirements
-
-- Blender 4.2.0 or newer
-
----
+- **Blender Version**: Blender 4.0 or newer.
+- **Languages**: Includes English (Default) and Japanese translations, automatically switching based on Blender's language settings.
 
 ## License
 
@@ -56,61 +30,31 @@ Copyright (C) 2025 Amatsukast
 
 ---
 
----
-
 # Origin Tools（日本語）
 
-**Origin Tools**は、オブジェクトの原点を各軸（X/Y/Z）の最小・最大・中心、またはバウンディングボックスの中心に素早く移動できるBlenderアドオンです。  
-モデリングやシーン整理の効率化に役立ちます。
-
----
+**Origin Tools**は、オブジェクトの原点を各軸（X/Y/Z）の最小・最大・中心、またはバウンディングボックスの中心に素早く移動できるBlenderアドオンです。モデリングやシーン整理の効率化に大きく貢献します。
 
 ## 主な機能
 
-- オブジェクト原点をX/Y/Z軸のMinまたはMax位置へ移動
-- 各軸ごとに原点を中心（Center）に移動
-- バウンディングボックス全軸の中心に原点を移動
-- 「原点を動かす」の代わりに「メッシュ自体を移動」することも可能（ワールド位置維持）
-- トランスフォーム値（位置・回転・スケール）が入っていても問題なく機能
-- 親子関係や親オブジェクトが回転・変形している場合でも正しく動作
-- ローカル軸・グローバル軸（ワールド座標）どちらも対応
-- 複数オブジェクトをまとめて処理可能
-- Sidebarパネルから直感的に操作できるシンプルUI
-
----
+- **各軸の原点移動**: オブジェクト原点をX/Y/Z軸のMin、Max、または中心（Center）へ移動させます。
+- **事前センタリング**: 指定したMin/Max位置へ原点を移動させる前に、全軸の中心へ自動的に原点をリセットする機能です。
+- **全軸の中心へ移動**: バウンディングボックス全軸の中心へ一括で原点を移動させます。
+- **面への原点スナップ**: 編集モード専用機能です。アクティブな面（最後に選択した面）に原点を合わせ、面の法線がワールドの下向き（-Z）になるようにオブジェクト全体の回転を自動調整します。
+- **メッシュ移動モード**: 原点ではなくメッシュ自体を移動させ、指定位置に合わせるモードです。ワールド座標における原点位置を維持したい場合に極めて有効です。
+- **軸モード切替**: ローカル軸とグローバル軸（ワールド座標）を切り替えて操作可能です。
+- **堅牢な動作**: トランスフォーム値（位置・回転・スケール）が適用されていなくても問題なく機能し、親子関係や親オブジェクトの変形にも破綻なく対応します。
+- **一括処理**: 複数オブジェクトを選択した状態での同時処理に対応しています。
 
 ## パネルの場所
 
-`3Dビューポート > サイドバー（Nキー）> Origin Tools`タブ
+`3Dビューポート > サイドバー（Nキー）> Origin Tools`タブ から直感的に操作できるシンプルなUIにアクセスできます。
 
----
+## 動作条件と言語
 
-## 使い方
-
-1. 3Dビューポートでオブジェクトを1つ以上選択
-2. サイドバーの「Origin Tools」パネルを開く
-3. 軸（X/Y/Z）や操作（Min / Center / Max）を選択
-4. 必要に応じてローカル/グローバル軸や「メッシュを移動」モードをチェック
-5. 各ボタンを押すと、選択したオブジェクトの原点またはメッシュが指定通りに移動します
-
----
-
-## 多言語対応
-
-- デフォルト英語UI
-- Blenderの言語設定が「日本語」の場合は自動で日本語UIに切り替わります
-
----
-
-## 動作条件
-
-- Blender 4.2.0 以降
-
----
+- **対応バージョン**: Blender 4.0以降
+- **多言語対応**: デフォルトは英語UIですが、Blenderの言語設定が日本語の場合は自動で日本語UIに切り替わります。
 
 ## ライセンス
 
 [GPL-3.0-or-later](https://www.gnu.org/licenses/gpl-3.0.html)  
 Copyright (C) 2025 Amatsukast
-
----
